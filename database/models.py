@@ -3,7 +3,7 @@ from pathlib import Path
 from sqlalchemy import Column, Integer, String, Boolean, Date, ForeignKey, create_engine
 from sqlalchemy.orm import relationship, sessionmaker, declarative_base
 
-from config import DB_USER_NAME, DB_PASSWORD, DB_HOST, DB_NAME, DB_PORT
+from config import POSTGRESQl_LINK
 
 Base = declarative_base()
 
@@ -33,7 +33,7 @@ class AdCreative(Base):
 
 BASE_DIR = Path(__file__).resolve().parent
 
-DATABASE_URL = f"postgresql+psycopg2://{DB_USER_NAME}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
+DATABASE_URL = POSTGRESQl_LINK
 
 engine = create_engine(DATABASE_URL)
 Session = sessionmaker(bind=engine)
