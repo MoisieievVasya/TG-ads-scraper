@@ -1,5 +1,3 @@
-from pathlib import Path
-
 from sqlalchemy import Column, Integer, String, Boolean, Date, ForeignKey, create_engine
 from sqlalchemy.orm import relationship, sessionmaker, declarative_base
 
@@ -31,7 +29,6 @@ class AdCreative(Base):
 
     business = relationship('Business')
 
-BASE_DIR = Path(__file__).resolve().parent
 
 DATABASE_URL = POSTGRESQl_LINK
 

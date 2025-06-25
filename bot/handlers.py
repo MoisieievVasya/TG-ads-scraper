@@ -65,6 +65,35 @@ async def add_business_command(message: types.Message, command: CommandObject):
         session.close()
 
 
+@router.message(Command("delete_business"))
+async def delete_business_command(message: types.Message, command: CommandObject):
+    """
+    Видаляє бізнес з бази даних за його ID.
+    Формат: /delete_business <ID>
+    """
+    if not command.args or not command.args.strip().isdigit():
+        await message.answer("❌ Будь ласка, вкажіть ID бізнесу для видалення.\nПриклад: /delete_business 2")
+        return
+
+    business_id = int(command.args.strip())
+    session = Session()
+    try:
+        business = session.query(Business).filter_by(fb_page_id=str(business_id)).first()
+        if not business:
+            await message.answer(f"⚠️ Бізнес з ID `{business_id}` не знайдено.")
+            return
+
+        session.delete(business)
+        session.commit()
+        await message.answer(f"✅ Бізнес '{business.name}' (ID: {business_id}) успішно видалено.")
+        print(f"Видалено бізнес: {business.name} (ID: {business_id})")
+    except Exception as e:
+        session.rollback()
+        await message.answer(f"❌ Помилка при видаленні бізнесу: {e}")
+        print(f"Помилка видалення бізнесу: {e}")
+    finally:
+        session.close()
+
 @router.message(Command('start'))
 async def start_handler(msg: types.Message):
     """
@@ -86,60 +115,60 @@ async def list_businesses(msg: types.Message):
     session.close()
 
 # --- ТРЕБА ФІКСАНУТИ ---
-@router.message(F.text.in_({"⏳ Довготривалі креативи", "/long"}))
-async def long_ads(msg: types.Message):
-    """
-    Показує унікальні креативи, що активні 10+ днів,
-    з урахуванням схожості зображень.
-    """
-    await msg.answer("⏳ Шукаю довготривалі унікальні креативи...")
-
-    session = Session()
-    ads = session.query(AdCreative).options(joinedload(AdCreative.business)).filter(
-        AdCreative.duration_days >= 10,
-        AdCreative.is_active == True
-    ).order_by(AdCreative.start_date.desc()).all()
-    session.close()
-
-    if not ads:
-        await msg.answer("📊 Немає активних креативів, що працюють 10 або більше днів.")
-        return
-
-    HAMMING_DISTANCE_THRESHOLD = 14 #по тестам 14 найкраще відсіює схожі
-    unique_ads = []
-    processed_hashes = []
-
-    for ad in ads:
-        if not ad.image_hash or not ad.local_path:
-            continue
-        try:
-            current_hash = imagehash.hex_to_hash(ad.image_hash)
-            is_duplicate = False
-            for existing_hash_str in processed_hashes:
-                existing_hash = imagehash.hex_to_hash(existing_hash_str)
-                if current_hash - existing_hash <= HAMMING_DISTANCE_THRESHOLD:
-                    is_duplicate = True
-                    break
-            if not is_duplicate:
-                unique_ads.append(ad)
-                processed_hashes.append(ad.image_hash)
-        except Exception as e:
-            print(f"Помилка порівняння хешу для /long ad_id {ad.id}: {e}")
-
-    if not unique_ads:
-        await msg.answer("📊 Після фільтрації дублікатів не знайдено довготривалих креативів.")
-        return
-
-    await msg.answer(f"Знайдено {len(unique_ads)} унікальних креативів, що працюють 10+ днів:")
-    for ad in unique_ads:
-        caption = (f"<b>{ad.business.name}</b>\n"
-                   f"Тривалість: {ad.duration_days} дн.\n"
-                   f"Схожих варіацій (за даними FB): {ad.similar_ads_count}")
-        try:
-            await msg.answer_photo(FSInputFile(ad.local_path), caption=caption, parse_mode="HTML")
-        except Exception as e:
-            print(f"Помилка відправки фото для /long: {e}")
-            await msg.answer(f"Не вдалося завантажити фото для ID: {ad.fb_ad_id}")
+# @router.message(F.text.in_({"⏳ Довготривалі креативи", "/long"}))
+# async def long_ads(msg: types.Message):
+#     """
+#     Показує унікальні креативи, що активні 10+ днів,
+#     з урахуванням схожості зображень.
+#     """
+#     await msg.answer("⏳ Шукаю довготривалі унікальні креативи...")
+#
+#     session = Session()
+#     ads = session.query(AdCreative).options(joinedload(AdCreative.business)).filter(
+#         AdCreative.duration_days >= 10,
+#         AdCreative.is_active == True
+#     ).order_by(AdCreative.start_date.desc()).all()
+#     session.close()
+#
+#     if not ads:
+#         await msg.answer("📊 Немає активних креативів, що працюють 10 або більше днів.")
+#         return
+#
+#     HAMMING_DISTANCE_THRESHOLD = 14 #по тестам 14 найкраще відсіює схожі
+#     unique_ads = []
+#     processed_hashes = []
+#
+#     for ad in ads:
+#         if not ad.image_hash or not ad.local_path:
+#             continue
+#         try:
+#             current_hash = imagehash.hex_to_hash(ad.image_hash)
+#             is_duplicate = False
+#             for existing_hash_str in processed_hashes:
+#                 existing_hash = imagehash.hex_to_hash(existing_hash_str)
+#                 if current_hash - existing_hash <= HAMMING_DISTANCE_THRESHOLD:
+#                     is_duplicate = True
+#                     break
+#             if not is_duplicate:
+#                 unique_ads.append(ad)
+#                 processed_hashes.append(ad.image_hash)
+#         except Exception as e:
+#             print(f"Помилка порівняння хешу для /long ad_id {ad.id}: {e}")
+#
+#     if not unique_ads:
+#         await msg.answer("📊 Після фільтрації дублікатів не знайдено довготривалих креативів.")
+#         return
+#
+#     await msg.answer(f"Знайдено {len(unique_ads)} унікальних креативів, що працюють 10+ днів:")
+#     for ad in unique_ads:
+#         caption = (f"<b>{ad.business.name}</b>\n"
+#                    f"Тривалість: {ad.duration_days} дн.\n"
+#                    f"Схожих варіацій (за даними FB): {ad.similar_ads_count}")
+#         try:
+#             await msg.answer_photo(FSInputFile(ad.local_path), caption=caption, parse_mode="HTML")
+#         except Exception as e:
+#             print(f"Помилка відправки фото для /long: {e}")
+#             await msg.answer(f"Не вдалося завантажити фото для ID: {ad.fb_ad_id}")
 
 
 @router.message(F.text.in_({"📊 Звіт по унікальних", "/report"}))
