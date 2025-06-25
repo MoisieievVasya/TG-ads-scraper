@@ -1,3 +1,4 @@
+from fake_server import start_fake_server
 import asyncio
 
 from aiogram import Bot, Dispatcher
@@ -17,13 +18,14 @@ async def main():
     Base.metadata.create_all(engine)
     print("Database tables checked/created.")
 
-
     bot = Bot(token=BOT_TOKEN)
     dp = Dispatcher(storage=MemoryStorage())
     dp.include_router(router)
     start_scheduler()
     print('✅ Бот запущено, очікую повідомлення...')
+
     asyncio.create_task(run_clean_up())
+    await start_fake_server()
     await dp.start_polling(bot)
 
 if __name__ == '__main__':
