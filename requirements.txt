@@ -26,7 +26,7 @@ pyee==13.0.0
 python-dotenv==1.1.1
 PyWavelets==1.8.0
 requests==2.32.4
-scipy==1.16.0
+scipy==1.15.3
 soupsieve==2.7
 SQLAlchemy==2.0.41
 typing-inspection==0.4.1
