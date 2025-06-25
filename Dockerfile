@@ -9,3 +9,5 @@ COPY . .
 RUN playwright install chromium
 
 CMD ["python", "run.py"]
+
+EXPOSE 1000
