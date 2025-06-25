@@ -1,0 +1,6 @@
+services:
+  - type: web
+    name: tg-ads-scraper
+    env: docker
+    dockerfilePath: ./Dockerfile
+    plan: free

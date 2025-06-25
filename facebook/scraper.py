@@ -253,7 +253,11 @@ async def scrape_all():
             browser = None
             try:
                 browser = await p.chromium.launch(headless=True)
-                page = await browser.new_page()
+                context = await browser.new_context(
+                    locale='uk-UA',
+                    user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/115.0"
+                )
+                page = await context.new_page()
 
                 for business in businesses:
                     logger.info(f"Починаю скрапінг для бізнесу: '{business.name}'")
