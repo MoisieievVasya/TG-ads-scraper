@@ -1,3 +1,8 @@
+import logging
+
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
+
 from fake_server import start_fake_server
 import asyncio
 
@@ -13,16 +18,16 @@ from scheduler.updater import start as start_scheduler
 
 async def main():
     shared_state.is_scraping = False
-    print("ℹ️ Статус скрапінгу скинуто на 'вільно'.")
-    print("Ensuring database tables exist...")
+    logger.info("ℹ️ Статус скрапінгу скинуто на 'вільно'.")
+    logger.info("Ensuring database tables exist...")
     Base.metadata.create_all(engine)
-    print("Database tables checked/created.")
+    logger.info("Database tables checked/created.")
 
     bot = Bot(token=BOT_TOKEN)
     dp = Dispatcher(storage=MemoryStorage())
     dp.include_router(router)
     start_scheduler()
-    print('✅ Бот запущено, очікую повідомлення...')
+    logger.info('✅ Бот запущено, очікую повідомлення...')
 
     asyncio.create_task(run_clean_up())
     await start_fake_server()

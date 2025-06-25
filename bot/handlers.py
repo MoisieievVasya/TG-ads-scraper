@@ -1,3 +1,6 @@
+import logging
+
+logger = logging.getLogger(__name__)
 from collections import defaultdict
 from datetime import date, timedelta
 
@@ -55,12 +58,12 @@ async def add_business_command(message: types.Message, command: CommandObject):
         session.commit()
 
         await message.answer(f"✅ Бізнес '{business_name}' з ID `{fb_page_id}` успішно додано до моніторингу!")
-        print(f"Додано новий бізнес: {business_name} ({fb_page_id})")
+        logger.info(f"Додано новий бізнес: {business_name} ({fb_page_id})")
 
     except Exception as e:
         session.rollback()
         await message.answer(f"❌ Сталася помилка при додаванні в базу даних: {e}")
-        print(f"Помилка додавання бізнесу: {e}")
+        logger.error(f"Помилка додавання бізнесу: {e}")
     finally:
         session.close()
 
@@ -86,11 +89,11 @@ async def delete_business_command(message: types.Message, command: CommandObject
         session.delete(business)
         session.commit()
         await message.answer(f"✅ Бізнес '{business.name}' (ID: {business_id}) успішно видалено.")
-        print(f"Видалено бізнес: {business.name} (ID: {business_id})")
+        logger.info(f"Видалено бізнес: {business.name} (ID: {business_id})")
     except Exception as e:
         session.rollback()
         await message.answer(f"❌ Помилка при видаленні бізнесу: {e}")
-        print(f"Помилка видалення бізнесу: {e}")
+        logger.error(f"Помилка видалення бізнесу: {e}")
     finally:
         session.close()
 
@@ -275,7 +278,7 @@ async def business_chosen(call: types.CallbackQuery, state: FSMContext):
             if not found_group:
                 hash_groups.append([ad])
         except Exception as e:
-            print(f"Помилка обробки хешу для ad_id {ad.id}: {e}")
+            logger.error(f"Помилка обробки хешу для ad_id {ad.id}: {e}")
 
     if not hash_groups:
         await call.message.edit_text("🤷‍♂️ Не вдалося знайти креативи з зображеннями для аналізу.")
@@ -335,7 +338,7 @@ async def manual_scrape_command(message: types.Message):
         await scrape_all()
         await message.answer("✅ Скрапінг успішно завершено!")
     except Exception as e:
-        print(f"Помилка під час ручного скрапінгу: {e}")
+        logger.error(f"Помилка під час ручного скрапінгу: {e}")
         await message.answer(f"❌ Під час скрапінгу сталася помилка.\nДеталі: {e}")
 
 
@@ -438,7 +441,7 @@ async def business_chosen_all(call: types.CallbackQuery, state: FSMContext):
                         await call.message.answer_media_group(media_group)
                         media_group = []
                 except Exception as e:
-                    print(f"Помилка при додаванні фото в групу: {e}")
+                    logger.error(f"Помилка при додаванні фото в групу: {e}")
 
         if media_group:
             await call.message.answer_media_group(media_group)
@@ -465,4 +468,4 @@ async def send_ads_category(message: types.Message, ads_with_counts: list, heade
             try:
                 await message.answer_photo(FSInputFile(ad.local_path), caption=caption, parse_mode="HTML")
             except Exception as e:
-                print(f"Помилка відправки фото {ad.id}: {e}")
+                logger.error(f"Помилка відправки фото {ad.id}: {e}")
